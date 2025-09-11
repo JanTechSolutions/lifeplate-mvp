@@ -3,7 +3,7 @@
 // ===============================
 
 // ========== GLOBAL VARIABLES ========== //
- currentScreen = "";
+let currentScreen = "";
 
 // ========== UTILITIES ========== //
 function $(id) {
