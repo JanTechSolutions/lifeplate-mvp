@@ -103,7 +103,7 @@ function showTaskSuggestions() {
 document.addEventListener("DOMContentLoaded", showHomeScreen);
 
 // ========== GLOBAL VARIABLES ========== //
-let currentScreen = "";
+currentScreen = "";
 
 // ========== UTILITIES ========== //
 function $(id) {
@@ -211,7 +211,7 @@ function showTaskSuggestions() {
 document.addEventListener("DOMContentLoaded", showHomeScreen);
 
 // ========== GLOBAL VARIABLES ========== //
-let currentScreen = "";
+ currentScreen = "";
 
 // ========== UTILITIES ========== //
 function $(id) {
