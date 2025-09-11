@@ -257,6 +257,9 @@ function showPromptScreen() {
     <button onclick="viewTasks()">🍽️ View Your Plate</button>
   `;
 }
+function startOnboarding() {
+  showPromptScreen()
+}
 
 function viewTasks() {
   currentScreen = "view";
