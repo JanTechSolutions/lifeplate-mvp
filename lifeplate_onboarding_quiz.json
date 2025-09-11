@@ -1,0 +1,21 @@
+
+{
+  "questions": [
+    {
+      "question": "What’s your biggest challenge right now?",
+      "answers": [
+        { "text": "Focusing", "weights": { "Focus": 3 } },
+        { "text": "Time management", "weights": { "Time": 3 } },
+        { "text": "Overwhelm", "weights": { "Overwhelm": 3 } }
+      ]
+    },
+    {
+      "question": "What motivates you most?",
+      "answers": [
+        { "text": "Helping others", "weights": { "Purpose": 2 } },
+        { "text": "Hitting milestones", "weights": { "Achievement": 2 } },
+        { "text": "Feeling balanced", "weights": { "Balance": 2 } }
+      ]
+    }
+  ]
+}
