@@ -65,6 +65,7 @@ function addTask() {
   saveToLocal("tasks", tasks);
   $("newTask").value = "";
   showPromptScreen();
+  <button onclick="showPromptScreen()">⬅ Back</button>
 }
 
 function deleteTask(index) {
@@ -190,6 +191,27 @@ function editTask(index) {
     saveToLocal("tasks", tasks);
     viewTasks();
   }
+}
+
+function showAddTask() {
+  $("app").innerHTML = `
+    <h2>Add a New Task</h2>
+    <input type="text" id="taskTitle" placeholder="Task title"/><br><br>
+    <input type="number" id="taskDuration" placeholder="Duration (min)"/><br><br>
+    <select id="taskEnergy">
+      <option value="Low">Low Energy</option>
+      <option value="Medium">Medium Energy</option>
+      <option value="High">High Energy</option>
+    </select><br><br>
+    <input type="text" id="taskCategory" placeholder="Category (e.g. Work, Health)"/><br><br>
+    <input type="date" id="taskDueDate"/><br><br>
+    <input type="text" id="taskTags" placeholder="Tags (comma separated)"/><br><br>
+    <input type="text" id="taskLocation" placeholder="Location (e.g. Home, Gym, Library)"/><br><br>
+    <textarea id="taskNotes" placeholder="Notes or links..."></textarea><br><br>
+    <button onclick="addTask()">➕ Add Task</button>
+    <br><br>
+    <button onclick="showPromptScreen()">⬅ Back</button>
+  `;
 }
 
 // ========== SUGGESTIONS & SUPPORT ========== //
@@ -340,14 +362,14 @@ function viewTasks() {
   const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   const categories = JSON.parse(localStorage.getItem("categories")) || [];
 
-  const counts = {};
-  categories.forEach((cat) => (counts[cat] = 0));
-  tasks.forEach((task) => {
+  let counts = {};
+  categories.forEach(cat => counts[cat] = 0);
+  tasks.forEach(task => {
     if (counts[task.category] !== undefined) counts[task.category]++;
   });
 
-  const labels = Object.keys(counts).filter((cat) => counts[cat] > 0);
-  const data = labels.map((cat) => counts[cat]);
+  const labels = Object.keys(counts).filter(cat => counts[cat] > 0);
+  const data = labels.map(cat => counts[cat]);
 
   document.getElementById("app").innerHTML = `
     <h2>Your Plate</h2>
@@ -362,19 +384,10 @@ function viewTasks() {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: [
-          '#6c63ff', '#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0', '#9966ff'
-        ]
+        backgroundColor: ['#6c63ff', '#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0', '#9966ff']
       }]
     },
     options: {
-      onClick: (event, elements) => {
-        if (elements.length > 0) {
-          const clickedIndex = elements[0].index;
-          const clickedCategory = labels[clickedIndex];
-          showTasksByCategory(clickedCategory);
-        }
-      },
       plugins: {
         legend: { position: "bottom" },
         title: { display: true, text: "Tasks by Category" }
@@ -382,6 +395,7 @@ function viewTasks() {
     }
   });
 }
+
 
 // ========== TASKS BY CATEGORY ==========
 function showTasksByCategory(category) {
@@ -408,25 +422,22 @@ function showTasksByCategory(category) {
 function viewSingleTask(index) {
   const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
   const task = tasks[index];
-  if (!task) return viewTasks();
 
-  let html = `<h2>${task.title}</h2>`;
-  html += `<p><strong>Category:</strong> ${task.category}</p>`;
-  html += `<p><strong>Duration:</strong> ${task.duration} min</p>`;
-  html += `<p><strong>Energy:</strong> ${task.energy}</p>`;
-  html += `<p><strong>Tags:</strong> ${task.tags.join(", ")}</p>`;
-  html += `<p><strong>Due Date:</strong> ${task.dueDate || "N/A"}</p>`;
-  html += `<p><strong>Location:</strong> ${task.location}</p>`;
-  html += `<p><strong>Notes:</strong><br>${task.notes || "None"}</p>`;
-  html += `
+  document.getElementById("app").innerHTML = `
+    <h2>Task Details</h2>
+    <p><strong>Title:</strong> ${task.title}</p>
+    <p><strong>Category:</strong> ${task.category}</p>
+    <p><strong>Energy:</strong> ${task.energy}</p>
+    <p><strong>Time:</strong> ${task.duration} min</p>
+    <p><strong>Due Date:</strong> ${task.dueDate}</p>
+    <p><strong>Location:</strong> ${task.location}</p>
+    <p><strong>Notes:</strong> ${task.notes || ""}</p>
     <br>
     <button onclick="editTask(${index})">✏️ Edit</button>
-    <button onclick="deleteTask(${index})">🗑️ Delete</button>
+    <button onclick="deleteTask(${index})">🗑 Delete</button>
     <br><br>
-    <button onclick="viewTasks()">⬅ Back to Plate</button>
+    <button onclick="viewTasks()">⬅ Back to Your Plate</button>
   `;
-
-  document.getElementById("app").innerHTML = html;
 }
 
 // ========== DELETE TASK ==========
@@ -574,6 +585,7 @@ function suggestTasks() {
 function showTaskSuggestions() {
   document.getElementById("app").innerHTML = `
     <h2>Let’s Clear Your Plate</h2>
+
     <label>How are you feeling right now?</label><br>
     <select id="moodCheck">
       <option value="Overwhelmed">😩 Overwhelmed</option>
@@ -586,9 +598,10 @@ function showTaskSuggestions() {
     <label>How much time do you have? (in minutes)</label><br>
     <input id="availableTime" type="number" /><br><br>
 
+    <p><strong>Energy Matching:</strong> Will this task take a lot or a little?</p>
+
     <button onclick="suggestTasks()">Show Me Tasks</button>
     <button onclick="showPromptScreen()">⬅ Back</button>
-    <button onclick="showSupportScreen()">Reflect & Support</button>
   `;
 }
 // ========== PHASE 6: Support & Reflect Screen ==========
