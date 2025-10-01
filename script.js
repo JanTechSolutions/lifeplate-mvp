@@ -10,6 +10,34 @@ function $(id) { return document.getElementById(id); }
 function saveToLocal(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function loadFromLocal(key) { return JSON.parse(localStorage.getItem(key)) || []; }
 
+// ----- Onboarding data -----
+let quizData = [];
+let currentQuestionIndex = 0;
+let promptScores = {};
+let promptLibrary = [];
+
+// Load quiz + prompts
+fetch("lifeplate_onboarding_quiz.json")
+  .then(r => r.ok ? r.json() : { questions: [] })
+  .then(data => { quizData = data.questions || []; })
+  .catch(() => { quizData = []; });
+
+fetch("promptLibrary.json")
+  .then(r => r.ok ? r.json() : [])
+  .then(data => { promptLibrary = data || []; })
+  .catch(() => { promptLibrary = []; });
+
+// Helpers for prompts
+function getTopPromptTags(scores, topN = 3) {
+  return Object.entries(scores || {})
+    .sort((a,b) => b[1]-a[1])
+    .slice(0, topN)
+    .map(([tag]) => tag);
+}
+function getPromptsByTags(tags) {
+  return (promptLibrary || []).filter(p => p.tags?.some(t => tags.includes(t)));
+}
+w
 // ---------- HOME ----------
 function showHomeScreen() {
   currentScreen = "home";
@@ -19,7 +47,13 @@ function showHomeScreen() {
   `;
 }
 function startOnboarding() {
-  showPromptScreen();
+  // If already onboarded, skip straight to the app hub
+  if (localStorage.getItem("onboarded") === "true") {
+    showPromptScreen();
+    return;
+  }
+  // Otherwise Persona → Quiz
+  showPersonaOptions();
 }
 
 // ---------- PROMPT / HUB ----------
@@ -31,8 +65,28 @@ function showPromptScreen() {
     <button onclick="showAddTask()">➕ Add New Task</button>
     <button onclick="showTaskSuggestions()">⚡ Clear or Navigate Your Plate</button>
     <button onclick="viewTasks()">🍽️ View Your Plate</button>
+    <button onclick="startQuiz()">🎯 Retake Onboarding Quiz</button>
   `;
 }
+const profiles = listProfiles();
+const activeId = getActiveProfileId();
+const active = profiles.find(p => p.id === activeId) || { name: "My Plate" };
+let plateUI = `<div style="margin:8px 0; padding:8px; border:1px solid #ddd;">
+  <strong>Plate:</strong> ${active.name}
+  <details style="margin-top:6px;">
+    <summary>Switch / Create</summary>
+    ${profiles.map(p => `
+      <div>
+        <button onclick="switchProfile('${p.id}')">${p.name}</button>
+      </div>`).join("")}
+    <div style="margin-top:6px;">
+      <button onclick="(function(){const n=prompt('Name this plate (e.g., Work, Home)'); if(n) createProfile(n);})()">➕ New Plate</button>
+    </div>
+  </details>
+</div>`;
+$("app").innerHTML = plateUI + `
+  <!-- your existing prompt buttons go here -->
+`;
 
 // ---------- ADD TASK (SCREEN) ----------
 function showAddTask() {
@@ -169,6 +223,98 @@ function deleteTask(index) {
   saveToLocal("tasks", tasks);
   viewTasks();
 }
+function showPersonaOptions() {
+  document.getElementById("app").innerHTML = `
+    <h2>Select your Plate Persona</h2>
+    <p style="color:#666;margin-top:-6px;">(This helps tailor prompts later. You can change it anytime.)</p>
+    <button onclick="selectPersona('Student')">Student</button>
+    <button onclick="selectPersona('Caregiver')">Caregiver</button>
+    <button onclick="selectPersona('Professional')">Professional</button>
+    <button onclick="selectPersona('Blank')">Blank Plate</button>
+    <br><br>
+    <button onclick="startQuiz()">Skip</button>
+    <button onclick="showHomeScreen()">⬅ Back</button>
+  `;
+}
+function selectPersona(persona) {
+  localStorage.setItem("persona", persona);
+  startQuiz();
+}
+function startQuiz() {
+  currentQuestionIndex = 0;
+  promptScores = {};
+  if (!quizData || quizData.length === 0) {
+    // If the JSON didn’t load for any reason, skip gracefully
+    showQuizResults(); // will just show an empty set but proceed
+    return;
+  }
+  showNextQuizQuestion();
+}
+
+function showNextQuizQuestion() {
+  if (currentQuestionIndex >= quizData.length) {
+    showQuizResults();
+    return;
+  }
+  const q = quizData[currentQuestionIndex];
+  let html = `<h2>${q.question}</h2>`;
+  q.answers.forEach((a, i) => {
+    html += `<button onclick="selectAnswer(${i})">${a.text}</button><br><br>`;
+  });
+  html += `<button onclick="skipQuestion()">Skip →</button><br><br>`;
+  html += `<button onclick="showHomeScreen()">⬅ Cancel</button>`;
+  document.getElementById("app").innerHTML = html;
+}
+
+function selectAnswer(index) {
+  const q = quizData[currentQuestionIndex];
+  const answer = q.answers[index];
+  for (const tag in answer.weights) {
+    if (!promptScores[tag]) promptScores[tag] = 0;
+    promptScores[tag] += answer.weights[tag];
+  }
+  currentQuestionIndex++;
+  showNextQuizQuestion();
+}
+
+function skipQuestion() {
+  currentQuestionIndex++;
+  showNextQuizQuestion();
+}
+
+function showQuizResults() {
+  const topTags = getTopPromptTags(promptScores);
+  const matchedPrompts = getPromptsByTags(topTags);
+
+  let html = `<h2>Your Prompt Profile</h2>`;
+  const persona = localStorage.getItem("persona");
+  if (persona) html += `<p><strong>Persona:</strong> ${persona}</p>`;
+  if (topTags.length) html += `<p><strong>Top needs:</strong> ${topTags.join(", ")}</p>`;
+  if (matchedPrompts.length) {
+    html += `<h3>Suggestions</h3><ul>`;
+    matchedPrompts.slice(0,5).forEach(p => { html += `<li>${p.text}</li>`; });
+    html += `</ul>`;
+  } else {
+    html += `<p style="color:#666;">We’ll learn your preferences as you use LifePlate.</p>`;
+  }
+
+  html += `
+    <br>
+    <button onclick="finishOnboarding()">Continue to LifePlate →</button>
+    <br><br>
+    <button onclick="startQuiz()">Retake Quiz</button>
+    <button onclick="showHomeScreen()">⬅ Home</button>
+  `;
+
+  // Persist
+  localStorage.setItem("quizScores", JSON.stringify(promptScores));
+  document.getElementById("app").innerHTML = html;
+}
+
+function finishOnboarding() {
+  localStorage.setItem("onboarded", "true");
+  showPromptScreen();
+}
 
 // ---------- SUGGESTIONS ----------
 const moodAffirmations = {
@@ -281,3 +427,54 @@ function showSupportScreen() {
 
 // ---------- INIT ----------
 document.addEventListener("DOMContentLoaded", showHomeScreen);
+// ----- Plate Profiles (local only) -----
+function listProfiles() {
+  return JSON.parse(localStorage.getItem("lp_profiles") || "[]");
+}
+function setActiveProfileId(id) {
+  localStorage.setItem("lp_activeProfileId", id);
+}
+function getActiveProfileId() {
+  let id = localStorage.getItem("lp_activeProfileId");
+  if (!id) {
+    id = "default";
+    ensureProfile(id, "My Plate");
+    setActiveProfileId(id);
+  }
+  return id;
+}
+function ensureProfile(id, name) {
+  const profiles = listProfiles();
+  if (!profiles.find(p => p.id === id)) {
+    profiles.push({ id, name });
+    localStorage.setItem("lp_profiles", JSON.stringify(profiles));
+    localStorage.setItem("lp_data_" + id, JSON.stringify({ tasks: [], categories: [] }));
+  }
+}
+function loadData() {
+  const id = getActiveProfileId();
+  return JSON.parse(localStorage.getItem("lp_data_" + id) || '{"tasks":[],"categories":[]}');
+}
+function saveData(data) {
+  const id = getActiveProfileId();
+  localStorage.setItem("lp_data_" + id, JSON.stringify(data));
+}
+function getTasks() {
+  const d = loadData();
+  return d.tasks || [];
+}
+function saveTasks(tasks) {
+  const d = loadData();
+  d.tasks = tasks;
+  saveData(d);
+}
+function createProfile(name) {
+  const id = "p_" + Date.now().toString(36);
+  ensureProfile(id, name || "New Plate");
+  setActiveProfileId(id);
+  showPromptScreen();
+}
+function switchProfile(id) {
+  setActiveProfileId(id);
+  showPromptScreen();
+}
