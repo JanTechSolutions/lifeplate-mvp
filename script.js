@@ -1,24 +1,16 @@
 // ===============================
-// 🚀 LifePlate App – script.js (CLEAN MVP FINAL BUILD)
+// 🚀 LifePlate App – script.js (CLEAN SINGLE VERSION)
 // ===============================
 
-// ========== GLOBAL VARIABLES ========== //
-let currentScreen = "";
+// ---------- GLOBAL ----------
+var currentScreen = ""; // use var to avoid redeclare errors
 
-// ========== UTILITIES ========== //
-function $(id) {
-  return document.getElementById(id);
-}
+// ---------- UTILITIES ----------
+function $(id) { return document.getElementById(id); }
+function saveToLocal(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+function loadFromLocal(key) { return JSON.parse(localStorage.getItem(key)) || []; }
 
-function saveToLocal(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-function loadFromLocal(key) {
-  return JSON.parse(localStorage.getItem(key)) || [];
-}
-
-// ========== MAIN APP SCREENS ========== //
+// ---------- HOME ----------
 function showHomeScreen() {
   currentScreen = "home";
   $("app").innerHTML = `
@@ -26,564 +18,174 @@ function showHomeScreen() {
     <button onclick="startOnboarding()">Start</button>
   `;
 }
-
-function showPromptScreen() {
-  currentScreen = "prompt";
-  $("app").innerHTML = `
-    <h2>Prompt Time 💡</h2>
-    <input type="text" id="newTask" placeholder="Enter a task" />
-    <button onclick="addTask()">Add Task</button>
-    <br><br>
-    <button onclick="showTaskSuggestions()">Clear or Navigate Your Plate</button>
-    <br><br>
-    <button onclick="viewTasks()">View Your Plate</button>
-  `;
-}
-
-function viewTasks() {
-  currentScreen = "view";
-  const tasks = loadFromLocal("tasks");
-  if (!tasks.length) return showPromptScreen();
-  let html = "<h2>Your Plate 🍽️</h2>";
-  tasks.forEach((t, i) => {
-    html += `<div>
-      <strong>${t.title}</strong>
-      <button onclick="editTask(${i})">✏️</button>
-      <button onclick="deleteTask(${i})">🗑️</button>
-    </div>`;
-  });
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  $("app").innerHTML = html;
-}
-
-// ========== TASK MANAGEMENT ========== //
-function addTask() {
-  const task = $("newTask").value.trim();
-  if (!task) return;
-  const tasks = loadFromLocal("tasks");
-  tasks.push({ title: task });
-  saveToLocal("tasks", tasks);
-  $("newTask").value = "";
+function startOnboarding() {
   showPromptScreen();
-  <button onclick="showPromptScreen()">⬅ Back</button>
 }
 
-function deleteTask(index) {
-  const tasks = loadFromLocal("tasks");
-  tasks.splice(index, 1);
-  saveToLocal("tasks", tasks);
-  viewTasks();
-}
-
-function editTask(index) {
-  const tasks = loadFromLocal("tasks");
-  const newTitle = prompt("Edit task:", tasks[index].title);
-  if (newTitle !== null) {
-    tasks[index].title = newTitle;
-    saveToLocal("tasks", tasks);
-    viewTasks();
-  }
-}
-
-// ========== SUGGESTIONS & SUPPORT ========== //
-function showTaskSuggestions() {
-  const tasks = loadFromLocal("tasks");
-  let html = `<h2>Suggested Tasks 🌟</h2>`;
-  if (tasks.length === 0) {
-    html += `<p>No tasks to suggest. Add some first!</p>`;
-  } else {
-    tasks.slice(0, 3).forEach(t => {
-      html += `<p>• ${t.title}</p>`;
-    });
-  }
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  $("app").innerHTML = html;
-}
-
-// ========== INIT ========== //
-document.addEventListener("DOMContentLoaded", showHomeScreen);
-
-// ========== GLOBAL VARIABLES ========== //
-currentScreen = "";
-
-// ========== UTILITIES ========== //
-function $(id) {
-  return document.getElementById(id);
-}
-
-function saveToLocal(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-function loadFromLocal(key) {
-  return JSON.parse(localStorage.getItem(key)) || [];
-}
-
-// ========== MAIN APP SCREENS ========== //
-function showHomeScreen() {
-  currentScreen = "home";
-  $("app").innerHTML = `
-    <h1>Welcome to LifePlate 🍽️</h1>
-    <button onclick="startOnboarding()">Start</button>
-  `;
-}
-
+// ---------- PROMPT / HUB ----------
 function showPromptScreen() {
   currentScreen = "prompt";
   $("app").innerHTML = `
-    <h2>Add a Task 💡</h2>
-    <input type="text" id="taskTitle" placeholder="Task title"/><br><br>
-    <input type="number" id="taskDuration" placeholder="Duration (min)"/><br><br>
-    <select id="taskEnergy">
-      <option value="Low">Low Energy</option>
-      <option value="Medium">Medium Energy</option>
-      <option value="High">High Energy</option>
-    </select><br><br>
-    <input type="text" id="taskCategory" placeholder="Category (e.g. Work, Health)"/><br><br>
-    <button onclick="addTask()">➕ Add Task</button>
-    <hr>
+    <h2>Welcome back!</h2>
+    <p>What would you like to do?</p>
+    <button onclick="showAddTask()">➕ Add New Task</button>
     <button onclick="showTaskSuggestions()">⚡ Clear or Navigate Your Plate</button>
     <button onclick="viewTasks()">🍽️ View Your Plate</button>
   `;
 }
 
-function viewTasks() {
-  currentScreen = "view";
-  const tasks = loadFromLocal("tasks");
-  if (!tasks.length) return showPromptScreen();
-  let html = "<h2>Your Plate 🍽️</h2>";
-  tasks.forEach((t, i) => {
-    html += `<div>
-      <strong>${t.title}</strong> – ${t.duration} min • ${t.energy} • ${t.category}
-      <button onclick="editTask(${i})">✏️</button>
-      <button onclick="deleteTask(${i})">🗑️</button>
-    </div>`;
-  });
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  $("app").innerHTML = html;
-}
-
-// ========== TASK MANAGEMENT ========== //
-function addTask() {
-  const title = $("taskTitle").value.trim();
-  const duration = parseInt($("taskDuration").value);
-  const energy = $("taskEnergy").value;
-  const category = $("taskCategory").value.trim();
-  if (!title || isNaN(duration)) return;
-  const tasks = loadFromLocal("tasks");
-  tasks.push({ title, duration, energy, category });
-  saveToLocal("tasks", tasks);
-  showPromptScreen();
-}
-
-function deleteTask(index) {
-  const tasks = loadFromLocal("tasks");
-  tasks.splice(index, 1);
-  saveToLocal("tasks", tasks);
-  viewTasks();
-}
-
-function editTask(index) {
-  const tasks = loadFromLocal("tasks");
-  const newTitle = prompt("Edit task:", tasks[index].title);
-  if (newTitle !== null) {
-    tasks[index].title = newTitle;
-    saveToLocal("tasks", tasks);
-    viewTasks();
-  }
-}
-
+// ---------- ADD TASK (SCREEN) ----------
 function showAddTask() {
+  currentScreen = "add";
   $("app").innerHTML = `
     <h2>Add a New Task</h2>
     <input type="text" id="taskTitle" placeholder="Task title"/><br><br>
+
     <input type="number" id="taskDuration" placeholder="Duration (min)"/><br><br>
+
+    <label>Energy level</label>
+    <p style="font-size:0.9em;color:#666;margin:4px 0 0;">
+      Will this task take a lot or a little? Think about your energy.
+    </p>
     <select id="taskEnergy">
-      <option value="Low">Low Energy</option>
-      <option value="Medium">Medium Energy</option>
-      <option value="High">High Energy</option>
+      <option value="Low">Low</option>
+      <option value="Medium">Medium</option>
+      <option value="High">High</option>
     </select><br><br>
+
     <input type="text" id="taskCategory" placeholder="Category (e.g. Work, Health)"/><br><br>
     <input type="date" id="taskDueDate"/><br><br>
     <input type="text" id="taskTags" placeholder="Tags (comma separated)"/><br><br>
     <input type="text" id="taskLocation" placeholder="Location (e.g. Home, Gym, Library)"/><br><br>
     <textarea id="taskNotes" placeholder="Notes or links..."></textarea><br><br>
+
     <button onclick="addTask()">➕ Add Task</button>
     <br><br>
     <button onclick="showPromptScreen()">⬅ Back</button>
   `;
 }
 
-// ========== SUGGESTIONS & SUPPORT ========== //
-function showTaskSuggestions() {
-  const tasks = loadFromLocal("tasks");
-  let html = `<h2>Suggested Tasks 🌟</h2>`;
-  if (tasks.length === 0) {
-    html += `<p>No tasks to suggest. Add some first!</p>`;
-  } else {
-    tasks.slice(0, 3).forEach(t => {
-      html += `<p>• ${t.title} – ${t.duration} min • ${t.energy}</p>`;
-    });
-  }
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  $("app").innerHTML = html;
-}
-
-// ========== INIT ========== //
-document.addEventListener("DOMContentLoaded", showHomeScreen);
-
-// ========== GLOBAL VARIABLES ========== //
- currentScreen = "";
-
-// ========== UTILITIES ========== //
-function $(id) {
-  return document.getElementById(id);
-}
-
-function saveToLocal(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-function loadFromLocal(key) {
-  return JSON.parse(localStorage.getItem(key)) || [];
-}
-
-// ========== MAIN APP SCREENS ========== //
-function showHomeScreen() {
-  currentScreen = "home";
-  $("app").innerHTML = `
-    <h1>Welcome to LifePlate 🍽️</h1>
-    <button onclick="startOnboarding()">Start</button>
-  `;
-}
-
-function showPromptScreen() {
-  currentScreen = "prompt";
-  $("app").innerHTML = `
-    <h2>Add a Task 💡</h2>
-    <input type="text" id="taskTitle" placeholder="Task title"/><br><br>
-    <input type="number" id="taskDuration" placeholder="Duration (min)"/><br><br>
-    <select id="taskEnergy">
-      <option value="Low">Low Energy</option>
-      <option value="Medium">Medium Energy</option>
-      <option value="High">High Energy</option>
-    </select><br><br>
-    <input type="text" id="taskCategory" placeholder="Category (e.g. Work, Health)"/><br><br>
-    <input type="date" id="taskDueDate"/><br><br>
-    <input type="text" id="taskTags" placeholder="Tags (comma separated)"/><br><br>
-    <input type="text" id="taskLocation" placeholder="Location (e.g. Home, Gym, Library)"/><br><br>
-    <textarea id="taskNotes" placeholder="Notes or links..."></textarea><br><br>
-    <button onclick="addTask()">➕ Add Task</button>
-    <hr>
-    <button onclick="showTaskSuggestions()">⚡ Clear or Navigate Your Plate</button>
-    <button onclick="viewTasks()">🍽️ View Your Plate</button>
-  `;
-}
-function startOnboarding() {
-  showPromptScreen()
-}
-
-function viewTasks() {
-  currentScreen = "view";
-  const tasks = loadFromLocal("tasks");
-  if (!tasks.length) return showPromptScreen();
-  let html = "<h2>Your Plate 🍽️</h2>";
-  tasks.forEach((t, i) => {
-    html += `<div style="border: 1px solid #ccc; padding: 8px; margin: 6px 0;">
-      <strong>${t.title}</strong><br>
-      ${t.duration} min • ${t.energy} • ${t.category}<br>
-      Due: ${t.dueDate || "N/A"}<br>
-      Tags: ${t.tags.join(", ")}<br>
-      Location: ${t.location || "-"}<br>
-      Notes: ${t.notes || "-"}<br>
-      <button onclick="editTask(${i})">✏️</button>
-      <button onclick="deleteTask(${i})">🗑️</button>
-    </div>`;
-  });
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  $("app").innerHTML = html;
-}
-
-// ========== TASK MANAGEMENT ========== //
 function addTask() {
   const title = $("taskTitle").value.trim();
   const duration = parseInt($("taskDuration").value);
   const energy = $("taskEnergy").value;
   const category = $("taskCategory").value.trim();
   const dueDate = $("taskDueDate").value;
-  const tags = $("taskTags").value.split(",").map(t => t.trim());
+  const tags = $("taskTags").value.split(",").map(t => t.trim()).filter(Boolean);
   const location = $("taskLocation").value.trim();
   const notes = $("taskNotes").value.trim();
 
-  if (!title || isNaN(duration)) return;
+  if (!title || isNaN(duration)) {
+    alert("Please enter a task title and duration.");
+    return;
+  }
+
   const tasks = loadFromLocal("tasks");
   tasks.push({ title, duration, energy, category, dueDate, tags, location, notes });
   saveToLocal("tasks", tasks);
   showPromptScreen();
 }
 
+// ---------- VIEW TASKS (LIST) ----------
+function viewTasks() {
+  currentScreen = "view";
+  const tasks = loadFromLocal("tasks");
+
+  if (!tasks.length) {
+    $("app").innerHTML = `
+      <h2>Your Plate 🍽️</h2>
+      <p>No tasks yet. Add one to get started.</p>
+      <button onclick="showAddTask()">➕ Add New Task</button>
+      <br><br><button onclick="showPromptScreen()">⬅ Back</button>
+    `;
+    return;
+  }
+
+  let html = "<h2>Your Plate 🍽️</h2>";
+  tasks.forEach((t, i) => {
+    html += `
+      <div style="border:1px solid #ccc; padding:8px; margin:6px 0;">
+        <strong>${t.title}</strong><br>
+        ${t.duration || "-"} min • ${t.energy || "-"} • ${t.category || "-"}<br>
+        Due: ${t.dueDate || "N/A"}<br>
+        Tags: ${(t.tags && t.tags.length) ? t.tags.join(", ") : "-"}<br>
+        Location: ${t.location || "-"}<br>
+        Notes: ${t.notes || "-"}<br>
+        <button onclick="editTask(${i})">✏️ Edit</button>
+        <button onclick="deleteTask(${i})">🗑️ Delete</button>
+      </div>
+    `;
+  });
+  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
+  $("app").innerHTML = html;
+}
+
+// ---------- EDIT / DELETE ----------
+function editTask(index) {
+  const tasks = loadFromLocal("tasks");
+  const t = tasks[index];
+  if (!t) return viewTasks();
+
+  $("app").innerHTML = `
+    <h2>Edit Task</h2>
+    <input id="taskTitle" value="${t.title || ""}"/><br><br>
+    <input id="taskDuration" type="number" value="${t.duration || 0}"/><br><br>
+    <select id="taskEnergy">
+      <option value="Low" ${t.energy==="Low"?"selected":""}>Low</option>
+      <option value="Medium" ${t.energy==="Medium"?"selected":""}>Medium</option>
+      <option value="High" ${t.energy==="High"?"selected":""}>High</option>
+    </select><br><br>
+    <input id="taskCategory" value="${t.category || ""}"/><br><br>
+    <input id="taskDueDate" type="date" value="${t.dueDate || ""}"/><br><br>
+    <input id="taskTags" value="${(t.tags||[]).join(", ")}"/><br><br>
+    <input id="taskLocation" value="${t.location || ""}"/><br><br>
+    <textarea id="taskNotes">${t.notes || ""}</textarea><br><br>
+
+    <button onclick="saveEditedTask(${index})">💾 Save</button>
+    <button onclick="viewTasks()">⬅ Cancel</button>
+  `;
+}
+function saveEditedTask(index) {
+  const tasks = loadFromLocal("tasks");
+  if (!tasks[index]) return viewTasks();
+
+  tasks[index] = {
+    title: $("taskTitle").value.trim(),
+    duration: parseInt($("taskDuration").value),
+    energy: $("taskEnergy").value,
+    category: $("taskCategory").value.trim(),
+    dueDate: $("taskDueDate").value,
+    tags: $("taskTags").value.split(",").map(t => t.trim()).filter(Boolean),
+    location: $("taskLocation").value.trim(),
+    notes: $("taskNotes").value.trim()
+  };
+  saveToLocal("tasks", tasks);
+  viewTasks();
+}
 function deleteTask(index) {
   const tasks = loadFromLocal("tasks");
+  if (!confirm("Delete this task?")) return;
   tasks.splice(index, 1);
   saveToLocal("tasks", tasks);
   viewTasks();
 }
 
-function editTask(index) {
-  const tasks = loadFromLocal("tasks");
-  const newTitle = prompt("Edit task:", tasks[index].title);
-  if (newTitle !== null) {
-    tasks[index].title = newTitle;
-    saveToLocal("tasks", tasks);
-    viewTasks();
-  }
-}
-
-// ========== SUGGESTIONS & SUPPORT ========== //
-function showTaskSuggestions() {
-  const tasks = loadFromLocal("tasks");
-  let html = `<h2>Suggested Tasks 🌟</h2>`;
-  if (tasks.length === 0) {
-    html += `<p>No tasks to suggest. Add some first!</p>`;
-  } else {
-    tasks.slice(0, 3).forEach(t => {
-      html += `<p>• ${t.title} – ${t.duration} min • ${t.energy}</p>`;
-    });
-  }
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  $("app").innerHTML = html;
-}
-
-// ========== INIT ========== //
-document.addEventListener("DOMContentLoaded", showHomeScreen);
-
-// ========== VIEW TASKS + PIE CHART ==========
-function viewTasks() {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const categories = JSON.parse(localStorage.getItem("categories")) || [];
-
-  let counts = {};
-  categories.forEach(cat => counts[cat] = 0);
-  tasks.forEach(task => {
-    if (counts[task.category] !== undefined) counts[task.category]++;
-  });
-
-  const labels = Object.keys(counts).filter(cat => counts[cat] > 0);
-  const data = labels.map(cat => counts[cat]);
-
-  document.getElementById("app").innerHTML = `
-    <h2>Your Plate</h2>
-    <canvas id="taskChart" width="300" height="300"></canvas>
-    <br><button onclick="showPromptScreen()">⬅ Back</button>
-  `;
-
-  const ctx = document.getElementById("taskChart").getContext("2d");
-  new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: ['#6c63ff', '#ff6384', '#36a2eb', '#ffcd56', '#4bc0c0', '#9966ff']
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { position: "bottom" },
-        title: { display: true, text: "Tasks by Category" }
-      }
-    }
-  });
-}
-
-
-// ========== TASKS BY CATEGORY ==========
-function showTasksByCategory(category) {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const filtered = tasks.filter((t) => t.category === category);
-
-  let html = `<h2>${category} Tasks</h2>`;
-  if (filtered.length === 0) {
-    html += `<p>No tasks found in this category.</p>`;
-  } else {
-    filtered.forEach((t, i) => {
-      html += `<div onclick="viewSingleTask(${i})" style="border:1px solid #ccc; padding:10px; margin:10px 0; cursor:pointer;">
-        <strong>${t.title}</strong><br>
-        ${t.duration} min • ${t.energy} • Due: ${t.dueDate || "N/A"}
-      </div>`;
-    });
-  }
-
-  html += `<br><button onclick="viewTasks()">⬅ Back to Plate</button>`;
-  document.getElementById("app").innerHTML = html;
-}
-
-// ========== VIEW SINGLE TASK ==========
-function viewSingleTask(index) {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const task = tasks[index];
-
-  document.getElementById("app").innerHTML = `
-    <h2>Task Details</h2>
-    <p><strong>Title:</strong> ${task.title}</p>
-    <p><strong>Category:</strong> ${task.category}</p>
-    <p><strong>Energy:</strong> ${task.energy}</p>
-    <p><strong>Time:</strong> ${task.duration} min</p>
-    <p><strong>Due Date:</strong> ${task.dueDate}</p>
-    <p><strong>Location:</strong> ${task.location}</p>
-    <p><strong>Notes:</strong> ${task.notes || ""}</p>
-    <br>
-    <button onclick="editTask(${index})">✏️ Edit</button>
-    <button onclick="deleteTask(${index})">🗑 Delete</button>
-    <br><br>
-    <button onclick="viewTasks()">⬅ Back to Your Plate</button>
-  `;
-}
-
-// ========== DELETE TASK ==========
-function deleteTask(index) {
-  if (!confirm("Are you sure you want to delete this task?")) return;
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  tasks.splice(index, 1);
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-  viewTasks();
-}
-
-// ========== EDIT TASK ==========
-function editTask(index) {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const task = tasks[index];
-  if (!task) return viewTasks();
-
-  const categories = JSON.parse(localStorage.getItem("categories")) || [];
-  const locations = JSON.parse(localStorage.getItem("locations")) || [];
-
-  const categoryOptions = categories.map((c) => `<option value="${c}" ${task.category === c ? "selected" : ""}>${c}</option>`).join("");
-  const locationOptions = locations.map((l) => `<option value="${l}" ${task.location === l ? "selected" : ""}>${l}</option>`).join("");
-
-  document.getElementById("app").innerHTML = `
-    <h2>Edit Task</h2>
-    <input id="taskTitle" value="${task.title}" /><br><br>
-    <label>Category:</label><select id="taskCategory">${categoryOptions}</select><br><br>
-    <label>Energy:</label>
-    <select id="taskEnergy">
-      <option ${task.energy === "Low" ? "selected" : ""}>Low</option>
-      <option ${task.energy === "Medium" ? "selected" : ""}>Medium</option>
-      <option ${task.energy === "High" ? "selected" : ""}>High</option>
-    </select><br><br>
-    <label>Tags:</label><input id="taskTags" value="${task.tags.join(", ")}" /><br><br>
-    <label>Duration (min):</label><input id="taskDuration" type="number" value="${task.duration}" /><br><br>
-    <label>Due Date:</label><input id="taskDueDate" type="date" value="${task.dueDate}" /><br><br>
-    <label>Location:</label><select id="taskLocation">${locationOptions}</select><br><br>
-    <label>Notes:</label><textarea id="taskNotes">${task.notes || ""}</textarea><br><br>
-    <button onclick="saveEditedTask(${index})">Save</button>
-    <button onclick="viewSingleTask(${index})">⬅ Back</button>
-  `;
-}
-
-function saveEditedTask(index) {
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const task = tasks[index];
-
-  task.title = document.getElementById("taskTitle").value;
-  task.category = document.getElementById("taskCategory").value;
-  task.energy = document.getElementById("taskEnergy").value;
-  task.tags = document.getElementById("taskTags").value.split(',').map(t => t.trim());
-  task.duration = parseInt(document.getElementById("taskDuration").value);
-  task.dueDate = document.getElementById("taskDueDate").value;
-  task.location = document.getElementById("taskLocation").value;
-  task.notes = document.getElementById("taskNotes").value;
-
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-  viewSingleTask(index);
-}
-// ========== GLOBAL MOOD AFFIRMATIONS ==========
+// ---------- SUGGESTIONS ----------
 const moodAffirmations = {
-  Overwhelmed: "Breathe. It's okay to take things one step at a time.",
-  Focused: "You're in the zone — let's channel it into meaningful progress.",
-  Tired: "Rest is productive too. Here's something gentle to start with.",
-  Energized: "You've got momentum! Let’s use it wisely.",
-  Avoidant: "Avoidance is often wisdom in disguise. Let’s ease into one small win."
+  Overwhelmed: "Breathe. One step at a time.",
+  Focused: "You’re in the zone — let’s use it.",
+  Tired: "Gentle progress counts.",
+  Energized: "Ride the wave — move one big thing.",
+  Avoidant: "Start tiny. Momentum will follow."
 };
-
-// ========== MOOD → ENERGY MAPPING ==========
 function getEnergyFromMood(mood) {
-  const mapping = {
-    Overwhelmed: "Low",
-    Tired: "Low",
-    Avoidant: "Medium",
-    Focused: "Medium",
-    Energized: "High"
-  };
-  return mapping[mood] || "Medium"; // Fallback to Medium if undefined
+  const map = { Overwhelmed:"Low", Tired:"Low", Avoidant:"Medium", Focused:"Medium", Energized:"High" };
+  return map[mood] || "Medium";
 }
 
-// ========== SUGGEST TASKS ==========
-function suggestTasks() {
-  const time = parseInt(document.getElementById("availableTime").value);
-  const mood = document.getElementById("moodCheck").value;
-  const inferredEnergy = getEnergyFromMood(mood);
-
-  const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  const energyRank = { Low: 1, Medium: 2, High: 3 };
-
-  // Affirmation from mood
-  const affirmation = moodAffirmations[mood] || "Let's get started.";
-
-  // Quiz prompt suggestion
-  const quizScores = JSON.parse(localStorage.getItem("quizScores")) || {};
-  const topTags = getTopPromptTags(quizScores);
-  const promptSuggestions = getPromptsByTags(topTags);
-  const randomPrompt = promptSuggestions.length > 0
-    ? promptSuggestions[Math.floor(Math.random() * promptSuggestions.length)].text
-    : null;
-
-  const filtered = tasks.filter(t =>
-    (!isNaN(time) && t.duration <= time) &&
-    energyRank[t.energy] <= energyRank[inferredEnergy]
-  );
-
-  const ranked = filtered.sort((a, b) => {
-    const energyDiff = energyRank[a.energy] - energyRank[b.energy];
-    const timeDiff = a.duration - b.duration;
-    return energyDiff !== 0 ? energyDiff : timeDiff;
-  });
-
-  const topTasks = ranked.slice(0, 3);
-
-  let html = `<h2>Your Plate Picks</h2>`;
-  html += `<p><em>${affirmation}</em></p>`;
-  if (randomPrompt) {
-    html += `<p><strong>Try this:</strong> ${randomPrompt}</p>`;
-  }
-  html += `<p>Mood: <strong>${mood}</strong> → Energy Level: <strong>${inferredEnergy}</strong></p>`;
-
-  if (topTasks.length === 0) {
-    html += `<p>No tasks matched your current time and energy level.</p>`;
-  } else {
-    topTasks.forEach((t, i) => {
-      html += `
-        <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
-          <strong>${i + 1}. ${t.title}</strong><br>
-          ${t.duration} min • ${t.energy} • ${t.category}
-        </div>
-      `;
-    });
-  }
-
-  html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
-  document.getElementById("app").innerHTML = html;
-
-  // Save mood to history
-  localStorage.setItem("mood", mood);
-  let history = JSON.parse(localStorage.getItem("moodHistory")) || [];
-  history.push({ mood, timestamp: new Date().toISOString() });
-  localStorage.setItem("moodHistory", JSON.stringify(history));
-}
-
-// ========== SHOW TASK SUGGESTION INPUT ==========
 function showTaskSuggestions() {
-  document.getElementById("app").innerHTML = `
+  currentScreen = "suggest";
+  $("app").innerHTML = `
     <h2>Let’s Clear Your Plate</h2>
 
     <label>How are you feeling right now?</label><br>
@@ -604,35 +206,78 @@ function showTaskSuggestions() {
     <button onclick="showPromptScreen()">⬅ Back</button>
   `;
 }
-// ========== PHASE 6: Support & Reflect Screen ==========
+
+function suggestTasks() {
+  const time = parseInt($("availableTime").value);
+  const mood = $("moodCheck").value;
+  const inferredEnergy = getEnergyFromMood(mood);
+
+  const tasks = loadFromLocal("tasks");
+  const energyRank = { Low:1, Medium:2, High:3 };
+
+  const affirmation = moodAffirmations[mood] || "Let's get started.";
+  const filtered = tasks.filter(t =>
+    (!isNaN(time) && t.duration <= time) &&
+    energyRank[(t.energy||"Medium")] <= energyRank[inferredEnergy]
+  );
+  const ranked = filtered.sort((a,b) =>
+    (energyRank[a.energy]-energyRank[b.energy]) || (a.duration-b.duration)
+  ).slice(0,3);
+
+  let html = `<h2>Your Plate Picks</h2>`;
+  html += `<p><em>${affirmation}</em></p>`;
+  html += `<p>Mood: <strong>${mood}</strong> → Energy Level: <strong>${inferredEnergy}</strong></p>`;
+
+  if (ranked.length === 0) {
+    html += `<p>No tasks matched your current time and energy level.</p>`;
+  } else {
+    ranked.forEach((t, i) => {
+      html += `
+        <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
+          <strong>${i+1}. ${t.title}</strong><br>
+          ${t.duration} min • ${t.energy} • ${t.category || "-"}
+        </div>
+      `;
+    });
+  }
+
+  html += `<br><button onclick="showTaskSuggestions()">⬅ Back</button>
+           <button onclick="showPromptScreen()">🏠 Main</button>`;
+  $("app").innerHTML = html;
+
+  // mood history
+  localStorage.setItem("mood", mood);
+  const history = loadFromLocal("moodHistory");
+  history.push({ mood, timestamp: new Date().toISOString() });
+  saveToLocal("moodHistory", history);
+}
+
+// ---------- SUPPORT / REFLECT ----------
 function showSupportScreen() {
-  const moodHistory = JSON.parse(localStorage.getItem("moodHistory")) || [];
-  const lastMood = moodHistory.length > 0 ? moodHistory[moodHistory.length - 1].mood : null;
-  const affirmation = lastMood ? moodAffirmations[lastMood] : "Reflect on what’s worked for you today.";
+  const moodHistory = loadFromLocal("moodHistory");
+  const lastMood = moodHistory.length ? moodHistory[moodHistory.length-1].mood : null;
+  const affirmation = lastMood ? moodAffirmations[lastMood] : "Reflect on what worked today.";
 
   let html = `<h2>Reflect & Support</h2>`;
   html += `<p><strong>Last Mood:</strong> ${lastMood || "N/A"}</p>`;
-  html += `<p><em>“${affirmation}”</em></p>`;
+  html += `<p><em>${affirmation}</em></p>`;
 
-  // Show mood history
   html += `<h3>📊 Mood History</h3>`;
-  if (moodHistory.length === 0) {
+  if (!moodHistory.length) {
     html += `<p>No moods logged yet.</p>`;
   } else {
     html += `<ul>`;
-    moodHistory.slice(-5).reverse().forEach(entry => {
-      const date = new Date(entry.timestamp);
-      html += `<li>${date.toLocaleString()}: <strong>${entry.mood}</strong></li>`;
+    moodHistory.slice(-10).reverse().forEach(e => {
+      html += `<li>${new Date(e.timestamp).toLocaleString()}: <strong>${e.mood}</strong></li>`;
     });
     html += `</ul>`;
   }
 
-  html += `
-    <br>
-    <button onclick="showEngageScreen()">🏠 Home</button>
-    <button onclick="showPromptScreen()">⬅ Back to Prompt</button>
-    <button onclick="resetApp()">🧼 Reset App</button>
-  `;
-
-  document.getElementById("app").innerHTML = html;
+  html += `<br>
+    <button onclick="showHomeScreen()">🏠 Home</button>
+    <button onclick="showPromptScreen()">⬅ Back to Prompt</button>`;
+  $("app").innerHTML = html;
 }
+
+// ---------- INIT ----------
+document.addEventListener("DOMContentLoaded", showHomeScreen);
