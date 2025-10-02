@@ -308,13 +308,38 @@ function showQuizResults() {
     <br>
     <button onclick="finishOnboarding()">Continue to LifePlate →</button>
     <br><br>
-    <button onclick="startQuiz()">Retake Quiz</button>
+    <button onclick="restartQuiz()">🔁 Retake Quiz</button>
     <button onclick="showHomeScreen()">⬅ Home</button>
   `;
 
   // Persist
   localStorage.setItem("quizScores", JSON.stringify(promptScores));
   document.getElementById("app").innerHTML = html;
+}
+function restartQuiz() {
+  // Optional: wipe previous quiz results so suggestions re-learn
+  localStorage.removeItem("quizScores");
+
+  // Hard reset in-memory state
+  currentQuestionIndex = 0;
+  promptScores = {};
+
+  // Ensure we have quiz questions (re-fetch if necessary)
+  if (!quizData || quizData.length === 0) {
+    fetch("lifeplate_onboarding_quiz.json")
+      .then(res => res.ok ? res.json() : { questions: [] })
+      .then(data => {
+        quizData = (data && data.questions) ? data.questions : [];
+        showNextQuizQuestion();
+      })
+      .catch(() => {
+        // Even if fetch fails, proceed gracefully (empty quiz → results)
+        quizData = [];
+        showNextQuizQuestion();
+      });
+  } else {
+    showNextQuizQuestion();
+  }
 }
 
 function finishOnboarding() {
