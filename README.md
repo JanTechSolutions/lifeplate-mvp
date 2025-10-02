@@ -55,5 +55,5 @@ Optional mobile app with gentle reminders
 👩🏽‍💻 Built With Care By
 
 Janelle Saint-Eloi
-Creative Entrepreneur | Founder of JanTech Solutions
+Creative Entrepreneur | Founder of Nellevate LLC
 Follow the journey: @lifeplateapp
