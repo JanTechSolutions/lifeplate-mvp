@@ -47,14 +47,13 @@ function showHomeScreen() {
   `;
 }
 function startOnboarding() {
-  // If already onboarded, skip straight to the app hub
   if (localStorage.getItem("onboarded") === "true") {
     showPromptScreen();
     return;
   }
-  // Otherwise Persona → Quiz
   showPersonaOptions();
 }
+
 
 // ---------- PROMPT / HUB ----------
 function showPromptScreen() {
@@ -226,20 +225,28 @@ function deleteTask(index) {
 function showPersonaOptions() {
   document.getElementById("app").innerHTML = `
     <h2>Select your Plate Persona</h2>
-    <p style="color:#666;margin-top:-6px;">(This helps tailor prompts later. You can change it anytime.)</p>
-    <button onclick="selectPersona('Student')">Student</button>
-    <button onclick="selectPersona('Caregiver')">Caregiver</button>
-    <button onclick="selectPersona('Professional')">Professional</button>
-    <button onclick="selectPersona('Blank')">Blank Plate</button>
-    <br><br>
+    <p style="color:#666;margin-top:-6px;">This helps tailor suggestions. You can change it later.</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button onclick="selectPersona('Student')">Student</button>
+      <button onclick="selectPersona('Caregiver')">Caregiver</button>
+      <button onclick="selectPersona('Professional')">Professional</button>
+      <button onclick="selectPersona('Blank')">Blank Plate</button>
+    </div>
+    <br>
     <button onclick="startQuiz()">Skip</button>
-    <button onclick="showHomeScreen()">⬅ Back</button>
+    <button onclick="showHomeScreen()">⬅ Home</button>
   `;
 }
+
 function selectPersona(persona) {
-  localStorage.setItem("persona", persona);
-  startQuiz();
+  try {
+    localStorage.setItem("persona", persona);
+  } catch (e) {
+    console.warn("Could not persist persona:", e);
+  }
+  startQuiz(); // move forward to quiz immediately
 }
+
 function startQuiz() {
   currentQuestionIndex = 0;
   promptScores = {};
@@ -317,14 +324,14 @@ function showQuizResults() {
   document.getElementById("app").innerHTML = html;
 }
 function restartQuiz() {
-  // Optional: wipe previous quiz results so suggestions re-learn
-  localStorage.removeItem("quizScores");
+  // wipe prior quiz result so suggestions re-learn
+  try { localStorage.removeItem("quizScores"); } catch (e) {}
 
-  // Hard reset in-memory state
+  // hard reset quiz state
   currentQuestionIndex = 0;
   promptScores = {};
 
-  // Ensure we have quiz questions (re-fetch if necessary)
+  // ensure quiz questions exist, fetch if needed
   if (!quizData || quizData.length === 0) {
     fetch("lifeplate_onboarding_quiz.json")
       .then(res => res.ok ? res.json() : { questions: [] })
@@ -333,9 +340,8 @@ function restartQuiz() {
         showNextQuizQuestion();
       })
       .catch(() => {
-        // Even if fetch fails, proceed gracefully (empty quiz → results)
         quizData = [];
-        showNextQuizQuestion();
+        showNextQuizQuestion(); // will fall through to results gracefully
       });
   } else {
     showNextQuizQuestion();
@@ -527,3 +533,34 @@ function switchProfile(id) {
   setActiveProfileId(id);
   showPromptScreen();
 }
+// ---------- EXPOSE HANDLERS TO WINDOW (for inline onclick) ----------
+(function exposeHandlers() {
+  // screens
+  if (typeof showHomeScreen === "function") window.showHomeScreen = showHomeScreen;
+  if (typeof showPromptScreen === "function") window.showPromptScreen = showPromptScreen;
+  if (typeof showAddTask === "function") window.showAddTask = showAddTask;
+  if (typeof viewTasks === "function") window.viewTasks = viewTasks;
+  if (typeof showTaskSuggestions === "function") window.showTaskSuggestions = showTaskSuggestions;
+  if (typeof showSupportScreen === "function") window.showSupportScreen = showSupportScreen;
+
+  // onboarding / persona / quiz
+  if (typeof startOnboarding === "function") window.startOnboarding = startOnboarding;
+  if (typeof showPersonaOptions === "function") window.showPersonaOptions = showPersonaOptions;
+  if (typeof selectPersona === "function") window.selectPersona = selectPersona;
+  if (typeof startQuiz === "function") window.startQuiz = startQuiz;
+  if (typeof restartQuiz === "function") window.restartQuiz = restartQuiz;
+  if (typeof showNextQuizQuestion === "function") window.showNextQuizQuestion = showNextQuizQuestion;
+  if (typeof selectAnswer === "function") window.selectAnswer = selectAnswer;
+  if (typeof skipQuestion === "function") window.skipQuestion = skipQuestion;
+  if (typeof showQuizResults === "function") window.showQuizResults = showQuizResults;
+  if (typeof finishOnboarding === "function") window.finishOnboarding = finishOnboarding;
+
+  // tasks
+  if (typeof addTask === "function") window.addTask = addTask;
+  if (typeof editTask === "function") window.editTask = editTask;
+  if (typeof saveEditedTask === "function") window.saveEditedTask = saveEditedTask;
+  if (typeof deleteTask === "function") window.deleteTask = deleteTask;
+
+  // suggest flow
+  if (typeof suggestTasks === "function") window.suggestTasks = suggestTasks;
+})();
