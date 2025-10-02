@@ -37,7 +37,7 @@ function getTopPromptTags(scores, topN = 3) {
 function getPromptsByTags(tags) {
   return (promptLibrary || []).filter(p => p.tags?.some(t => tags.includes(t)));
 }
-w
+
 // ---------- HOME ----------
 function showHomeScreen() {
   currentScreen = "home";
