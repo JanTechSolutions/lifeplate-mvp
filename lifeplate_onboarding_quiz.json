@@ -2,20 +2,335 @@
 {
   "questions": [
     {
-      "question": "What’s your biggest challenge right now?",
+      "id": 1,
+      "question": "What\u2019s your morning vibe usually like?",
       "answers": [
-        { "text": "Focusing", "weights": { "Focus": 3 } },
-        { "text": "Time management", "weights": { "Time": 3 } },
-        { "text": "Overwhelm", "weights": { "Overwhelm": 3 } }
+        {
+          "text": "I wake up ready to go (or at least fake it well).",
+          "weights": {
+            "Energy Boosts": 1,
+            "Focus Rituals": 1
+          }
+        },
+        {
+          "text": "Mornings are hard. I snooze a lot.",
+          "weights": {
+            "Reset Routines": 2,
+            "Energy Boosts": 1
+          }
+        },
+        {
+          "text": "I wake up anxious thinking of everything I have to do.",
+          "weights": {
+            "Overwhelm Resets": 2,
+            "Emotional Check-ins": 1
+          }
+        },
+        {
+          "text": "I have a solid routine that helps me ease in.",
+          "weights": {
+            "Focus Rituals": 2
+          }
+        }
       ]
     },
     {
-      "question": "What motivates you most?",
+      "id": 2,
+      "question": "You\u2019ve got 3 hours of free time. What\u2019s your move?",
       "answers": [
-        { "text": "Helping others", "weights": { "Purpose": 2 } },
-        { "text": "Hitting milestones", "weights": { "Achievement": 2 } },
-        { "text": "Feeling balanced", "weights": { "Balance": 2 } }
+        {
+          "text": "Catch up on work or organize tasks",
+          "weights": {
+            "Task Navigation": 2,
+            "Focus Rituals": 1
+          }
+        },
+        {
+          "text": "Watch something, nap, scroll",
+          "weights": {
+            "Permission to Pause": 2,
+            "Reset Routines": 1
+          }
+        },
+        {
+          "text": "Call or hang with loved ones",
+          "weights": {
+            "Emotional Check-ins": 2
+          }
+        },
+        {
+          "text": "Do something creative or move my body",
+          "weights": {
+            "Creative Flow": 2,
+            "Health + Self-Care": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "question": "How do you typically feel about your to-do list?",
+      "answers": [
+        {
+          "text": "I live by it\u2014lists are life.",
+          "weights": {
+            "Task Navigation": 2,
+            "Focus Rituals": 1
+          }
+        },
+        {
+          "text": "I make them and then ghost them.",
+          "weights": {
+            "Overwhelm Resets": 1,
+            "Task Navigation": 2
+          }
+        },
+        {
+          "text": "It stresses me out just looking at it.",
+          "weights": {
+            "Overwhelm Resets": 2,
+            "Calendar Anxiety Help": 1
+          }
+        },
+        {
+          "text": "What to-do list?",
+          "weights": {
+            "Reset Routines": 1,
+            "Accountability Nudges": 1,
+            "Task Navigation": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "question": "What usually throws off your groove?",
+      "answers": [
+        {
+          "text": "Interruptions and distractions",
+          "weights": {
+            "Focus Rituals": 2
+          }
+        },
+        {
+          "text": "Feeling like I don\u2019t know where to start",
+          "weights": {
+            "Task Navigation": 2,
+            "Overwhelm Resets": 1
+          }
+        },
+        {
+          "text": "Emotional exhaustion or burnout",
+          "weights": {
+            "Overwhelm Resets": 2,
+            "Energy Boosts": 1
+          }
+        },
+        {
+          "text": "Unexpected things popping up",
+          "weights": {
+            "Reset Routines": 1,
+            "Adaptability": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "question": "Your space feels\u2026",
+      "answers": [
+        {
+          "text": "Cluttered but functional",
+          "weights": {
+            "Environmental Cues": 1,
+            "Task Navigation": 1
+          }
+        },
+        {
+          "text": "Messy, and I hate it",
+          "weights": {
+            "Overwhelm Resets": 2,
+            "Environmental Cues": 1
+          }
+        },
+        {
+          "text": "Clean but not 'homey'",
+          "weights": {
+            "Environmental Cues": 1,
+            "Reset Routines": 1
+          }
+        },
+        {
+          "text": "Cozy chaos\u2014I make it work",
+          "weights": {
+            "Environmental Cues": 1,
+            "Permission to Pause": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "question": "You work best when\u2026",
+      "answers": [
+        {
+          "text": "I batch things and stay in a flow",
+          "weights": {
+            "Focus Rituals": 2,
+            "Time Awareness Tools": 1
+          }
+        },
+        {
+          "text": "Someone\u2019s holding me accountable",
+          "weights": {
+            "Accountability Nudges": 2
+          }
+        },
+        {
+          "text": "I\u2019m emotionally invested in what I\u2019m doing",
+          "weights": {
+            "Emotional Check-ins": 2
+          }
+        },
+        {
+          "text": "I trick myself into thinking it\u2019s a game",
+          "weights": {
+            "Gamification": 2,
+            "Focus Rituals": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "question": "What\u2019s your biggest life juggling act right now?",
+      "answers": [
+        {
+          "text": "Work/school stress",
+          "weights": {
+            "Task Navigation": 2,
+            "Focus Rituals": 1
+          }
+        },
+        {
+          "text": "Family, relationships, caregiving",
+          "weights": {
+            "Emotional Check-ins": 2,
+            "Reset Routines": 1
+          }
+        },
+        {
+          "text": "My own mental/physical health",
+          "weights": {
+            "Health + Self-Care": 2,
+            "Overwhelm Resets": 1
+          }
+        },
+        {
+          "text": "Starting something new (a project, job, habit)",
+          "weights": {
+            "Encouragement + Affirmations": 2,
+            "Task Navigation": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "question": "When it comes to your calendar or schedule...",
+      "answers": [
+        {
+          "text": "It\u2019s color-coded and overbooked",
+          "weights": {
+            "Time Awareness Tools": 2,
+            "Calendar Anxiety Help": 1
+          }
+        },
+        {
+          "text": "I avoid looking at it",
+          "weights": {
+            "Calendar Anxiety Help": 2,
+            "Overwhelm Resets": 1
+          }
+        },
+        {
+          "text": "It changes all the time",
+          "weights": {
+            "Adaptability": 2
+          }
+        },
+        {
+          "text": "I go with the flow",
+          "weights": {
+            "Permission to Pause": 1,
+            "Reset Routines": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "question": "When you\u2019re stuck or overwhelmed, what helps most?",
+      "answers": [
+        {
+          "text": "A pep talk or reminder of why I started",
+          "weights": {
+            "Encouragement + Affirmations": 2
+          }
+        },
+        {
+          "text": "A clear first step and low-pressure task",
+          "weights": {
+            "Task Navigation": 2
+          }
+        },
+        {
+          "text": "Taking care of my space or body",
+          "weights": {
+            "Environmental Cues": 1,
+            "Health + Self-Care": 1
+          }
+        },
+        {
+          "text": "Letting myself rest and reset guilt-free",
+          "weights": {
+            "Permission to Pause": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "question": "Biggest productivity killer for you?",
+      "answers": [
+        {
+          "text": "Notifications",
+          "weights": {
+            "Focus Rituals": 2
+          }
+        },
+        {
+          "text": "Overthinking tasks",
+          "weights": {
+            "Task Navigation": 2,
+            "Overwhelm Resets": 1
+          }
+        },
+        {
+          "text": "Saying yes to too much",
+          "weights": {
+            "Boundaries": 2
+          }
+        },
+        {
+          "text": "Not knowing where to start",
+          "weights": {
+            "Task Navigation": 2
+          }
+        }
       ]
     }
+  ]
+}
   ]
 }
