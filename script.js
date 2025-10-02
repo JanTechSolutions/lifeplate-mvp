@@ -243,12 +243,18 @@ function selectPersona(persona) {
 function startQuiz() {
   currentQuestionIndex = 0;
   promptScores = {};
+
+  // 🔑 Make sure quizData is fresh
   if (!quizData || quizData.length === 0) {
-    // If the JSON didn’t load for any reason, skip gracefully
-    showQuizResults(); // will just show an empty set but proceed
-    return;
+    fetch("lifeplate_onboarding_quiz.json")
+      .then((res) => res.json())
+      .then((data) => {
+        quizData = data.questions;
+        showNextQuizQuestion();
+      });
+  } else {
+    showNextQuizQuestion();
   }
-  showNextQuizQuestion();
 }
 
 function showNextQuizQuestion() {
@@ -354,24 +360,40 @@ function showTaskSuggestions() {
 }
 
 function suggestTasks() {
-  const time = parseInt($("availableTime").value);
-  const mood = $("moodCheck").value;
+  // 1) Read inputs
+  const time = parseInt(document.getElementById("availableTime").value);
+  const mood = document.getElementById("moodCheck").value;
+
+  // 2) Infer energy from mood
+  const energyRank = { Low: 1, Medium: 2, High: 3 };
   const inferredEnergy = getEnergyFromMood(mood);
 
+  // 3) Pull tasks
   const tasks = loadFromLocal("tasks");
-  const energyRank = { Low:1, Medium:2, High:3 };
 
-  const affirmation = moodAffirmations[mood] || "Let's get started.";
+  // 4) Prompt suggestion with fallback
+  const quizScores = JSON.parse(localStorage.getItem("quizScores")) || {};
+  const topTags = getTopPromptTags(quizScores);
+  const promptSuggestions = getPromptsByTags(topTags);
+  const randomPrompt = promptSuggestions.length > 0
+    ? promptSuggestions[Math.floor(Math.random() * promptSuggestions.length)].text
+    : "Take a breath — even one small step is progress.";
+
+  // 5) Filter + rank tasks
   const filtered = tasks.filter(t =>
     (!isNaN(time) && t.duration <= time) &&
-    energyRank[(t.energy||"Medium")] <= energyRank[inferredEnergy]
+    energyRank[(t.energy || "Medium")] <= energyRank[inferredEnergy]
   );
-  const ranked = filtered.sort((a,b) =>
-    (energyRank[a.energy]-energyRank[b.energy]) || (a.duration-b.duration)
-  ).slice(0,3);
 
+  const ranked = filtered.sort((a, b) => {
+    const e = energyRank[(a.energy || "Medium")] - energyRank[(b.energy || "Medium")];
+    if (e !== 0) return e;
+    return (a.duration || 0) - (b.duration || 0);
+  }).slice(0, 3);
+
+  // 6) Build HTML
   let html = `<h2>Your Plate Picks</h2>`;
-  html += `<p><em>${affirmation}</em></p>`;
+  html += `<p><em>${randomPrompt}</em></p>`;
   html += `<p>Mood: <strong>${mood}</strong> → Energy Level: <strong>${inferredEnergy}</strong></p>`;
 
   if (ranked.length === 0) {
@@ -380,8 +402,8 @@ function suggestTasks() {
     ranked.forEach((t, i) => {
       html += `
         <div style="border:1px solid #ccc; padding:10px; margin:10px 0;">
-          <strong>${i+1}. ${t.title}</strong><br>
-          ${t.duration} min • ${t.energy} • ${t.category || "-"}
+          <strong>${i + 1}. ${t.title}</strong><br>
+          ${(t.duration || 0)} min • ${(t.energy || "Medium")} • ${(t.category || "-")}
         </div>
       `;
     });
@@ -389,9 +411,11 @@ function suggestTasks() {
 
   html += `<br><button onclick="showTaskSuggestions()">⬅ Back</button>
            <button onclick="showPromptScreen()">🏠 Main</button>`;
-  $("app").innerHTML = html;
 
-  // mood history
+  // 7) Render
+  document.getElementById("app").innerHTML = html;
+
+  // 8) Save mood history (AFTER rendering so UI doesn't block)
   localStorage.setItem("mood", mood);
   const history = loadFromLocal("moodHistory");
   history.push({ mood, timestamp: new Date().toISOString() });
