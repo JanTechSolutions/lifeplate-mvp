@@ -10,6 +10,33 @@ function $(id) { return document.getElementById(id); }
 function saveToLocal(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function loadFromLocal(key) { return JSON.parse(localStorage.getItem(key)) || []; }
 
+// ---------- PRESET CATEGORIES BY PERSONA ----------
+const CATEGORIES_BY_PERSONA = {
+  Student: [
+    "Academics", "Extracurriculars", "Social", "Self-Care",
+    "Health & Wellness", "Family & Home", "Professional Development", "Finances"
+  ],
+  Caregiver: [
+    "Family & Childcare", "Work", "Health & Wellness", "Self-Care",
+    "Social", "Travel", "Finances", "Household"
+  ],
+  Professional: [
+    "Career", "Professional Development", "Hobbies",
+    "Health & Wellness", "Social", "Travel", "Finances", "Family & Relationships"
+  ],
+  Blank: ["Personal", "Work", "Health", "Errands", "Finances"]
+};
+
+// Safe getter: if nothing saved, fall back to a simple default
+function getCategories() {
+  try {
+    const cats = JSON.parse(localStorage.getItem("categories") || "[]");
+    return Array.isArray(cats) && cats.length ? cats : CATEGORIES_BY_PERSONA.Blank;
+  } catch {
+    return CATEGORIES_BY_PERSONA.Blank;
+  }
+}
+
 // ----- Onboarding data -----
 let quizData = [];
 let currentQuestionIndex = 0;
@@ -58,46 +85,37 @@ function startOnboarding() {
 // ---------- PROMPT / HUB ----------
 function showPromptScreen() {
   currentScreen = "prompt";
+
   $("app").innerHTML = `
     <h2>Welcome back!</h2>
     <p>What would you like to do?</p>
+    ${plateUI}
     <button onclick="showAddTask()">➕ Add New Task</button>
     <button onclick="showTaskSuggestions()">⚡ Clear or Navigate Your Plate</button>
     <button onclick="viewTasks()">🍽️ View Your Plate</button>
     <button onclick="startQuiz()">🎯 Retake Onboarding Quiz</button>
   `;
 }
-const profiles = listProfiles();
-const activeId = getActiveProfileId();
-const active = profiles.find(p => p.id === activeId) || { name: "My Plate" };
-let plateUI = `<div style="margin:8px 0; padding:8px; border:1px solid #ddd;">
-  <strong>Plate:</strong> ${active.name}
-  <details style="margin-top:6px;">
-    <summary>Switch / Create</summary>
-    ${profiles.map(p => `
-      <div>
-        <button onclick="switchProfile('${p.id}')">${p.name}</button>
-      </div>`).join("")}
-    <div style="margin-top:6px;">
-      <button onclick="(function(){const n=prompt('Name this plate (e.g., Work, Home)'); if(n) createProfile(n);})()">➕ New Plate</button>
-    </div>
-  </details>
-</div>`;
-$("app").innerHTML = plateUI + `
-  <!-- your existing prompt buttons go here -->
-`;
 
 // ---------- ADD TASK (SCREEN) ----------
 function showAddTask() {
   currentScreen = "add";
+
+  // Build category <option>s from persona presets in localStorage
+  const cats = (typeof getCategories === "function") ? getCategories() : [];
+  const categoryOptions = cats.map(c => `<option value="${c}">${c}</option>`).join("");
+
   $("app").innerHTML = `
     <h2>Add a New Task</h2>
+
+    <label>Title</label><br>
     <input type="text" id="taskTitle" placeholder="Task title"/><br><br>
 
+    <label>Duration (min)</label><br>
     <input type="number" id="taskDuration" placeholder="Duration (min)"/><br><br>
 
     <label>Energy level</label>
-    <p style="font-size:0.9em;color:#666;margin:4px 0 0;">
+    <p style="font-size:0.9em;color:#666;margin:4px 0 8px;">
       Will this task take a lot or a little? Think about your energy.
     </p>
     <select id="taskEnergy">
@@ -106,10 +124,26 @@ function showAddTask() {
       <option value="High">High</option>
     </select><br><br>
 
-    <input type="text" id="taskCategory" placeholder="Category (e.g. Work, Health)"/><br><br>
+    <label>Category</label><br>
+    <select id="taskCategory" onchange="toggleOtherCategory()">
+      ${categoryOptions}
+      <option value="__OTHER__">Other…</option>
+    </select>
+    <div id="otherCategoryRow" style="display:none; margin-top:6px;">
+      <input id="taskCategoryOther" placeholder="Type a category"/>
+    </div>
+    <br>
+
+    <label>Due date</label><br>
     <input type="date" id="taskDueDate"/><br><br>
-    <input type="text" id="taskTags" placeholder="Tags (comma separated)"/><br><br>
-    <input type="text" id="taskLocation" placeholder="Location (e.g. Home, Gym, Library)"/><br><br>
+
+    <label>Tags (comma separated)</label><br>
+    <input type="text" id="taskTags" placeholder="e.g., deep work, emails"/><br><br>
+
+    <label>Location</label><br>
+    <input type="text" id="taskLocation" placeholder="Home, Gym, Library"/><br><br>
+
+    <label>Notes</label><br>
     <textarea id="taskNotes" placeholder="Notes or links..."></textarea><br><br>
 
     <button onclick="addTask()">➕ Add Task</button>
@@ -120,18 +154,30 @@ function showAddTask() {
 
 function addTask() {
   const title = $("taskTitle").value.trim();
-  const duration = parseInt($("taskDuration").value);
+  const duration = parseInt($("taskDuration").value, 10);
   const energy = $("taskEnergy").value;
-  const category = $("taskCategory").value.trim();
-  const dueDate = $("taskDueDate").value;
-  const tags = $("taskTags").value.split(",").map(t => t.trim()).filter(Boolean);
-  const location = $("taskLocation").value.trim();
-  const notes = $("taskNotes").value.trim();
 
-  if (!title || isNaN(duration)) {
-    alert("Please enter a task title and duration.");
-    return;
+  // ---- category logic ----
+  let category = $("taskCategory").value;
+  if (category === "__OTHER__") {
+    category = ($("taskCategoryOther").value || "").trim() || "Other";
+    // Optional: remember the new category so it appears next time
+    if (typeof getCategories === "function") {
+      const cats = getCategories();
+      if (!cats.includes(category)) {
+        try {
+          localStorage.setItem("categories", JSON.stringify([...cats, category]));
+        } catch (e) {}
+      }
+    }
   }
+
+  const dueDate = $("taskDueDate").value;
+  const tags = ($("taskTags").value || "").split(",").map(t => t.trim()).filter(Boolean);
+  const location = ($("taskLocation").value || "").trim();
+  const notes = ($("taskNotes").value || "").trim();
+
+  if (!title || isNaN(duration)) return;
 
   const tasks = loadFromLocal("tasks");
   tasks.push({ title, duration, energy, category, dueDate, tags, location, notes });
@@ -241,10 +287,19 @@ function showPersonaOptions() {
 function selectPersona(persona) {
   try {
     localStorage.setItem("persona", persona);
+    const preset = CATEGORIES_BY_PERSONA[persona] || CATEGORIES_BY_PERSONA.Blank;
+    localStorage.setItem("categories", JSON.stringify(preset));
   } catch (e) {
-    console.warn("Could not persist persona:", e);
+    console.warn("Could not persist persona/categories", e);
   }
-  startQuiz(); // move forward to quiz immediately
+  startQuiz(); // or wherever you navigate next
+}
+
+function toggleOtherCategory() {
+  const sel = document.getElementById("taskCategory");
+  const row = document.getElementById("otherCategoryRow");
+  if (!sel || !row) return;
+  row.style.display = sel.value === "__OTHER__" ? "block" : "none";
 }
 
 function startQuiz() {
@@ -538,7 +593,7 @@ function switchProfile(id) {
   // screens
   if (typeof showHomeScreen === "function") window.showHomeScreen = showHomeScreen;
   if (typeof showPromptScreen === "function") window.showPromptScreen = showPromptScreen;
-  if (typeof showAddTask === "function") window.showAddTask = showAddTask;
+  if (typeof show === "function") window.show = show;
   if (typeof viewTasks === "function") window.viewTasks = viewTasks;
   if (typeof showTaskSuggestions === "function") window.showTaskSuggestions = showTaskSuggestions;
   if (typeof showSupportScreen === "function") window.showSupportScreen = showSupportScreen;
