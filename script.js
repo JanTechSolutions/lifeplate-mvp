@@ -86,10 +86,33 @@ function startOnboarding() {
 function showPromptScreen() {
   currentScreen = "prompt";
 
-  $("app").innerHTML = `
+  // 🧠 Build the Plate Switcher UI first
+  const profiles = listProfiles ? listProfiles() : [];
+  const activeId = getActiveProfileId ? getActiveProfileId() : null;
+  const active = profiles.find(p => p.id === activeId) || { name: "My Plate" };
+
+  const plateUI = `
+    <div style="margin:8px 0; padding:8px; border:1px solid #ddd;">
+      <strong>Plate:</strong> ${active.name}
+      <details style="margin-top:6px;">
+        <summary>Switch / Create</summary>
+        ${profiles.map(p => `
+          <div><button onclick="switchProfile('${p.id}')">${p.name}</button></div>
+        `).join("")}
+        <div style="margin-top:6px;">
+          <button onclick="(function(){
+            const n = prompt('Name this plate (e.g., Work, Home)');
+            if(n) createProfile(n);
+          })()">➕ New Plate</button>
+        </div>
+      </details>
+    </div>
+  `;
+
+  // 🎨 Now render the prompt screen
+  $("app").innerHTML = plateUI + `
     <h2>Welcome back!</h2>
     <p>What would you like to do?</p>
-    ${plateUI}
     <button onclick="showAddTask()">➕ Add New Task</button>
     <button onclick="showTaskSuggestions()">⚡ Clear or Navigate Your Plate</button>
     <button onclick="viewTasks()">🍽️ View Your Plate</button>
