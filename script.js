@@ -200,10 +200,15 @@ function viewTasks() {
     return;
   }
 
-  let html = "<h2>Your Plate 🍽️</h2>";
+  let html = `
+    <h2>Your Plate 🍽️</h2>
+    <button onclick="viewTasksChart()">📊 View as Chart</button>
+    <br><br>
+  `;
+
   tasks.forEach((t, i) => {
     html += `
-      <div style="border:1px solid #ccc; padding:8px; margin:6px 0;">
+      <div style="border:1px solid #ccc; padding:8px; margin:6px 0; border-radius:8px;">
         <strong>${t.title}</strong><br>
         ${t.duration || "-"} min • ${t.energy || "-"} • ${t.category || "-"}<br>
         Due: ${t.dueDate || "N/A"}<br>
@@ -215,7 +220,85 @@ function viewTasks() {
       </div>
     `;
   });
+
   html += `<br><button onclick="showPromptScreen()">⬅ Back</button>`;
+  $("app").innerHTML = html;
+}
+
+function viewTasksChart() {
+  currentScreen = "view_chart";
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
+  // Merge preset categories (if available) + any categories found on tasks
+  const baseCats = (typeof getCategories === "function") ? getCategories() : [];
+  const counts = {};
+  baseCats.forEach(cat => counts[cat] = 0);
+  tasks.forEach(t => {
+    const cat = (t.category || "Uncategorized");
+    if (!(cat in counts)) counts[cat] = 0;
+    counts[cat]++;
+  });
+
+  const labels = Object.keys(counts).filter(cat => counts[cat] > 0);
+  const data = labels.map(cat => counts[cat]);
+
+  $("app").innerHTML = `
+    <h2>Your Plate — Chart 📊</h2>
+    <canvas id="taskChart" width="340" height="340"></canvas>
+    <div style="margin-top:12px;">
+      <button onclick="viewTasks()">📋 View as List</button>
+      <button onclick="showPromptScreen()">⬅ Back</button>
+    </div>
+  `;
+
+  const ctx = document.getElementById("taskChart").getContext("2d");
+  // Create the chart
+  new Chart(ctx, {
+    type: "pie",
+    data: { labels, datasets: [{ data }] },
+    options: {
+      plugins: {
+        legend: { position: "bottom" },
+        title: { display: true, text: "Tasks by Category" }
+      },
+      onClick: (evt, elements) => {
+        if (elements && elements.length) {
+          const i = elements[0].index;
+          const clickedCategory = labels[i];
+          // drill down to tasks of that category
+          if (typeof showTasksByCategory === "function") {
+            showTasksByCategory(clickedCategory);
+          } else {
+            showTasksByCategoryFallback(clickedCategory);
+          }
+        }
+      }
+    }
+  });
+}
+
+function showTasksByCategoryFallback(category) {
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  const filtered = tasks.filter(t => (t.category || "Uncategorized") === category);
+
+  let html = `<h2>${category} Tasks</h2>`;
+  if (!filtered.length) {
+    html += `<p>No tasks found in this category.</p>`;
+  } else {
+    filtered.forEach((t, i) => {
+      const idx = tasks.indexOf(t); // original index in full list
+      html += `
+        <div style="border:1px solid #ccc; padding:8px; margin:6px 0; border-radius:8px;">
+          <strong>${t.title}</strong><br>
+          ${t.duration || "-"} min • ${t.energy || "-"} • ${t.category || "-"}<br>
+          Due: ${t.dueDate || "N/A"}<br>
+          <button onclick="editTask(${idx})">✏️ Edit</button>
+          <button onclick="deleteTask(${idx})">🗑️ Delete</button>
+        </div>
+      `;
+    });
+  }
+  html += `<br><button onclick="viewTasksChart()">⬅ Back to Chart</button>`;
   $("app").innerHTML = html;
 }
 
